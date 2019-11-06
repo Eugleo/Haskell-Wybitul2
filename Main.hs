@@ -28,7 +28,7 @@ while i<j:
     i=i+1
 |]
 
-parseShow :: PDoc a => Parser a -> String -> IO ()
+parseShow :: PrettyPrint a => Parser a -> String -> IO ()
 parseShow prs str = do
   let (Right ast) = parse prs "" str
   putStrLn $ ppshow ast

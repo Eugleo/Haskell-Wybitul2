@@ -15,55 +15,52 @@ indentLevel = 4
 lineLen :: Int
 lineLen = 88
 
-class PDoc a where
-  pdoc :: a -> Doc
+class PrettyPrint a where
+  pretty :: a -> Doc
 
-instance PDoc Symbol where
-  pdoc = text
+instance PrettyPrint Symbol where
+  pretty = text
 
-instance PDoc Expression where
-  pdoc (Var name)          = text name
-  pdoc (Num number)        = int number
-  pdoc (Str string)        = doubleQuotes (text string)
-  pdoc (e1 :+: e2)         = hsep [pdoc e1, text "+", pdoc e2]
-  pdoc (e1 :-: e2)         = hsep [pdoc e1, text "-", pdoc e2]
-  pdoc (e1 :/: e2)         = hsep [pdoc e1, text "/", pdoc e2]
-  pdoc (e1 :*: e2)         = hsep [pdoc e1, text "*", pdoc e2]
-  pdoc (e1 :<: e2)         = hsep [pdoc e1, text "<", pdoc e2]
-  pdoc (e1 :>: e2)         = hsep [pdoc e1, text ">", pdoc e2]
-  pdoc (FunCall name args) = text name <> parens (list args)
-  pdoc (Par exp)           = parens (pdoc exp)
+instance PrettyPrint Expression where
+  pretty (Var name)          = text name
+  pretty (Num number)        = int number
+  pretty (Str string)        = doubleQuotes (text string)
+  pretty (e1 :+: e2)         = hsep [pretty e1, text "+", pretty e2]
+  pretty (e1 :-: e2)         = hsep [pretty e1, text "-", pretty e2]
+  pretty (e1 :/: e2)         = hsep [pretty e1, text "/", pretty e2]
+  pretty (e1 :*: e2)         = hsep [pretty e1, text "*", pretty e2]
+  pretty (e1 :<: e2)         = hsep [pretty e1, text "<", pretty e2]
+  pretty (e1 :>: e2)         = hsep [pretty e1, text ">", pretty e2]
+  pretty (FunCall name args) = text name <> parens (list args)
+  pretty (Par exp)           = parens (pretty exp)
 
-instance PDoc Construct where
-  pdoc (FunDef name args body) = hangover header body <+> newline
+instance PrettyPrint Construct where
+  pretty (FunDef name args body) = block header body <+> newline
     where
-      header = text ("def " ++ name) <> parens (list args) <> text ":"
-  pdoc (Stmt exp) = pdoc exp
-  pdoc (Assign name exp) = text name <+> text "=" <+> pdoc exp
-  pdoc (If exp body []) = hangover (text "if" <+> pdoc exp <> text ":") body
-  pdoc (If exp ifBody elseBody) = ifBlock $+$ elseBlock
+      header = text ("def " ++ name) <> parens (list args)
+  pretty (Stmt exp) = pretty exp
+  pretty (Assign name exp) = hsep [text name, text "=", pretty exp]
+  pretty (If exp body []) = block (text "if" <+> pretty exp) body
+  pretty (If exp ifBody elseBody) = ifBlock $+$ elseBlock
     where
-      ifBlock = hangover (text "if" <+> pdoc exp <> text ":") ifBody
-      elseBlock = hangover (text "else:") elseBody
-  pdoc (While exp body) = hangover (text "while" <+> pdoc exp <> text ":") body
+      ifBlock = block (text "if" <+> pretty exp) ifBody
+      elseBlock = block (text "else") elseBody
+  pretty (While exp body) = block (text "while" <+> pretty exp) body
 
-instance PDoc Program where
-  pdoc (Program constructs) = vcat $ pdoc <$> constructs
+instance PrettyPrint Program where
+  pretty (Program constructs) = vcat $ pretty <$> constructs
 
-nested :: PDoc a => [a] -> Doc
-nested = nest indentLevel . vcat . fmap pdoc
+nested :: PrettyPrint a => [a] -> Doc
+nested = nest indentLevel . vcat . fmap pretty
 
-list :: PDoc a => [a] -> Doc
-list = hcat . intersperse (text ", ") . fmap pdoc
+list :: PrettyPrint a => [a] -> Doc
+list = hcat . intersperse (text ", ") . fmap pretty
 
-block :: PDoc a => [a] -> Doc
-block body = lbrace $+$ nested body $+$ rbrace
-
-hangover :: PDoc a => Doc -> [a] -> Doc
-hangover head body = head <+> lbrace $+$ nested body $+$ rbrace
+block :: PrettyPrint a => Doc -> [a] -> Doc
+block head body = head <> text ":" <+> lbrace $+$ nested body $+$ rbrace
 
 newline :: Doc
 newline = text "\n"
 
-ppshow :: PDoc a => a -> String
-ppshow = renderStyle (style {lineLength = lineLen}) . pdoc
+ppshow :: PrettyPrint a => a -> String
+ppshow = renderStyle (style {lineLength = lineLen}) . pretty
