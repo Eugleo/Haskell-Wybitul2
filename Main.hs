@@ -16,16 +16,7 @@ main = putStrLn ""
 test =
   tail
     [r|
-def displayMsg   (msg,x):
-  print(msg + string(x))
-i= 0
-j = readLine( )
-while i<j:
-    if even(i) :
-      displayMsg("Even: ", i)
-    else:
-      displayMsg("Not even: ", i)
-    i=i+1
+def add(a, b): return(a + b) / 20
 |]
 
 parseShow :: PrettyPrint a => Parser a -> String -> IO ()

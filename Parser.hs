@@ -85,11 +85,11 @@ expressionOperators =
     ]
   ]
 
--- TODO add support for braces
 construct :: Parser Construct
 construct =
   choice
-    [ try functionDefinition <?> "function definition"
+    [ try oneLineFunctionDefinition <?> "function definition"
+    , try functionDefinition <?> "function definition"
     , try while
     , try assignment
     , try ifelse
@@ -107,21 +107,36 @@ assignment = do
   eol
   return $ Assign varName exp
 
--- Add support for single-line function definitions
-functionDefinition :: Parser Construct
-functionDefinition =
-  L.indentBlock scn $ do
-    lexeme $ string "def"
-    name <- variableName
-    params <- parens $ parameters <|> (space $> [])
-    symbol ":"
-    return $ L.IndentMany Nothing (return . FunDef name params) construct
+functionParameters :: Parser [Symbol]
+functionParameters = params <|> (space $> [])
   where
-    parameters = do
+    params = do
       param1 <- try variableName
       paramRest <- many (symbol "," *> variableName)
       return $ param1 : paramRest
 
+functionHeader :: Parser (Symbol, [Symbol])
+functionHeader = do
+  lexeme $ string "def"
+  name <- variableName
+  params <- parens functionParameters
+  symbol ":"
+  return (name, params)
+
+functionDefinition :: Parser Construct
+functionDefinition =
+  L.indentBlock scn $ do
+    (name, params) <- functionHeader
+    return $ L.IndentSome Nothing (return . FunDef name params) construct
+
+oneLineFunctionDefinition :: Parser Construct
+oneLineFunctionDefinition = do
+  (name, params) <- functionHeader
+  exp <- expression
+  newline
+  return $ FunDef name params [Stmt exp]
+
+-- Add support for single-line while loops
 while :: Parser Construct
 while =
   L.indentBlock scn $ do
@@ -130,6 +145,7 @@ while =
     symbol ":"
     return $ L.IndentMany Nothing (return . While exp) construct
 
+-- Add support for single-line if blocks
 ifelse :: Parser Construct
 ifelse = do
   (clause, body) <-
