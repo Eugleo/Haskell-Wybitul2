@@ -16,7 +16,8 @@ main = putStrLn ""
 test =
   tail
     [r|
-def add(a, b): return(a + b) / 20
+while true: ;;;
+  go(here)
 |]
 
 parseShow :: PrettyPrint a => Parser a -> String -> IO ()

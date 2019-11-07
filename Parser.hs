@@ -90,6 +90,7 @@ construct =
   choice
     [ try oneLineFunctionDefinition <?> "function definition"
     , try functionDefinition <?> "function definition"
+    , try oneLineWhile
     , try while
     , try assignment
     , try ifelse
@@ -132,18 +133,30 @@ functionDefinition =
 oneLineFunctionDefinition :: Parser Construct
 oneLineFunctionDefinition = do
   (name, params) <- functionHeader
-  exp <- expression
+  exp <- expression <?> "single expression"
   newline
   return $ FunDef name params [Stmt exp]
+
+whileHeader :: Parser Expression
+whileHeader = do
+  lexeme $ string "while"
+  exp <- expression
+  symbol ":"
+  return exp
 
 -- Add support for single-line while loops
 while :: Parser Construct
 while =
   L.indentBlock scn $ do
-    lexeme $ string "while"
-    exp <- expression
-    symbol ":"
-    return $ L.IndentMany Nothing (return . While exp) construct
+    exp <- whileHeader
+    return $ L.IndentSome Nothing (return . While exp) construct
+
+oneLineWhile :: Parser Construct
+oneLineWhile = do
+  exp <- whileHeader
+  body <- expression <?> "single expression"
+  newline
+  return $ While exp [Stmt body]
 
 -- Add support for single-line if blocks
 ifelse :: Parser Construct
