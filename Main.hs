@@ -16,7 +16,7 @@ main = putStrLn ""
 test =
   tail
     [r|
-if 3 + a > 18: a= 2 else: dont_go_fuck()
+
 |]
 
 parseShow :: PrettyPrint a => Parser a -> String -> IO ()
