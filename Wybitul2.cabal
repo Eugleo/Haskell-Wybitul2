@@ -18,7 +18,7 @@ extra-source-files:  CHANGELOG.md
 
 executable Wybitul2
   main-is:             Main.hs
-  other-modules:       Spec, Parser, PrettyPrinter
+  other-modules:       Parser, PrettyPrinter, Spec
   -- other-extensions:
   build-depends:       megaparsec, pretty, parser-combinators, raw-strings-qq, base >=4.13 && <4.14
   -- hs-source-dirs:
