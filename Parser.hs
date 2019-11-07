@@ -93,6 +93,7 @@ construct =
     , try oneLineWhile
     , try while
     , try assignment
+    , try oneLineIf
     , try ifelse
     , statement <?> "expression"
     ]
@@ -107,6 +108,9 @@ assignment = do
   exp <- expression
   eol
   return $ Assign varName exp
+
+inlineConstruct :: Parser Construct
+inlineConstruct = Stmt <$> try expression <|> construct
 
 functionParameters :: Parser [Symbol]
 functionParameters = params <|> (space $> [])
@@ -158,14 +162,18 @@ oneLineWhile = do
   newline
   return $ While exp [Stmt body]
 
--- Add support for single-line if blocks
+ifHeader :: Parser Expression
+ifHeader = do
+  lexeme $ string "if"
+  exp <- expression
+  symbol ":"
+  return exp
+
 ifelse :: Parser Construct
 ifelse = do
   (clause, body) <-
     L.indentBlock scn $ do
-      lexeme $ string "if"
-      exp <- expression
-      symbol ":"
+      exp <- ifHeader
       return $ L.IndentSome Nothing (return . (exp, )) construct
   elseblock <-
     optional $
@@ -174,6 +182,23 @@ ifelse = do
       symbol ":"
       return $ L.IndentSome Nothing return construct
   return $ If clause body (fromMaybe [] elseblock)
+
+oneLineIf :: Parser Construct
+oneLineIf = do
+  (clause, body) <-
+    do exp <- ifHeader
+       body <- inlineConstruct
+       return (exp, body)
+  elseblock <-
+    optional $ do
+      lexeme $ string "else"
+      symbol ":"
+      (: []) <$> inlineConstruct
+  case elseblock of
+    Just elsebody -> return $ If clause [body] elsebody
+    Nothing -> do
+      newline
+      return $ If clause [body] []
 
 program :: Parser Program
 program = Program <$> many construct
