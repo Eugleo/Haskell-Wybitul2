@@ -135,7 +135,7 @@ oneLineFunctionDefinition :: Parser Construct
 oneLineFunctionDefinition = do
   (name, params) <- functionHeader
   exp <- expression <?> "single expression"
-  newline
+  eol
   return $ FunDef name params [Stmt exp]
 
 blockHeader :: String -> Parser Expression
@@ -155,7 +155,7 @@ oneLineWhile :: Parser Construct
 oneLineWhile = do
   exp <- blockHeader "while"
   body <- expression <?> "single expression"
-  newline
+  eol
   return $ While exp [Stmt body]
 
 inlineConstruct :: Parser Construct
@@ -189,7 +189,7 @@ oneLineIf = do
   case elseblock of
     Just elsebody -> return $ If clause [body] elsebody
     Nothing -> do
-      newline
+      eol
       return $ If clause [body] []
 
 program :: Parser Program
