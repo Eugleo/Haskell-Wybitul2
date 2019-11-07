@@ -92,22 +92,20 @@ construct =
     , try functionDefinition <?> "function definition"
     , try oneLineWhile
     , try while
-    , try assignment
+    , try assignment <* eol
     , try oneLineIf
     , try ifelse
-    , statement <?> "expression"
+    , statement <* eol <?> "expression"
     ]
 
 statement :: Parser Construct
-statement = Stmt <$> expression <* eol
+statement = Stmt <$> expression
 
 assignment :: Parser Construct
 assignment = do
   varName <- variableName
   symbol "="
-  exp <- expression
-  eol
-  return $ Assign varName exp
+  Assign varName <$> expression
 
 functionParameters :: Parser [Symbol]
 functionParameters = params <|> (space $> [])
@@ -135,7 +133,6 @@ oneLineFunctionDefinition :: Parser Construct
 oneLineFunctionDefinition = do
   (name, params) <- functionHeader
   exp <- expression <?> "single expression"
-  eol
   return $ FunDef name params [Stmt exp]
 
 blockHeader :: String -> Parser Expression
@@ -159,7 +156,17 @@ oneLineWhile = do
   return $ While exp [Stmt body]
 
 inlineConstruct :: Parser Construct
-inlineConstruct = Stmt <$> try expression <|> construct
+inlineConstruct =
+  choice
+    [ try oneLineFunctionDefinition <?> "function definition"
+    , try functionDefinition <?> "function definition"
+    , try oneLineWhile
+    , try while
+    , try assignment
+    , try oneLineIf
+    , try ifelse
+    , statement <?> "expression"
+    ]
 
 ifelse :: Parser Construct
 ifelse = do
@@ -186,11 +193,8 @@ oneLineIf = do
       lexeme $ string "else"
       symbol ":"
       (: []) <$> inlineConstruct
-  case elseblock of
-    Just elsebody -> return $ If clause [body] elsebody
-    Nothing -> do
-      eol
-      return $ If clause [body] []
+  eol
+  return $ If clause [body] (fromMaybe [] elseblock)
 
 program :: Parser Program
 program = Program <$> many (L.nonIndented scn construct) <* eof
