@@ -201,4 +201,4 @@ oneLineIf = do
       return $ If clause [body] []
 
 program :: Parser Program
-program = Program <$> many construct
+program = Program <$> many (L.nonIndented scn construct) <* eof
