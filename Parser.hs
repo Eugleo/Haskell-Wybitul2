@@ -109,9 +109,6 @@ assignment = do
   eol
   return $ Assign varName exp
 
-inlineConstruct :: Parser Construct
-inlineConstruct = Stmt <$> try expression <|> construct
-
 functionParameters :: Parser [Symbol]
 functionParameters = params <|> (space $> [])
   where
@@ -141,39 +138,34 @@ oneLineFunctionDefinition = do
   newline
   return $ FunDef name params [Stmt exp]
 
-whileHeader :: Parser Expression
-whileHeader = do
-  lexeme $ string "while"
-  exp <- expression
+blockHeader :: String -> Parser Expression
+blockHeader blockName = do
+  lexeme $ string blockName
+  exp <- expression <?> "single expression"
   symbol ":"
   return exp
 
--- Add support for single-line while loops
 while :: Parser Construct
 while =
   L.indentBlock scn $ do
-    exp <- whileHeader
+    exp <- blockHeader "while"
     return $ L.IndentSome Nothing (return . While exp) construct
 
 oneLineWhile :: Parser Construct
 oneLineWhile = do
-  exp <- whileHeader
+  exp <- blockHeader "while"
   body <- expression <?> "single expression"
   newline
   return $ While exp [Stmt body]
 
-ifHeader :: Parser Expression
-ifHeader = do
-  lexeme $ string "if"
-  exp <- expression
-  symbol ":"
-  return exp
+inlineConstruct :: Parser Construct
+inlineConstruct = Stmt <$> try expression <|> construct
 
 ifelse :: Parser Construct
 ifelse = do
   (clause, body) <-
     L.indentBlock scn $ do
-      exp <- ifHeader
+      exp <- blockHeader "if"
       return $ L.IndentSome Nothing (return . (exp, )) construct
   elseblock <-
     optional $
@@ -186,7 +178,7 @@ ifelse = do
 oneLineIf :: Parser Construct
 oneLineIf = do
   (clause, body) <-
-    do exp <- ifHeader
+    do exp <- blockHeader "if"
        body <- inlineConstruct
        return (exp, body)
   elseblock <-
