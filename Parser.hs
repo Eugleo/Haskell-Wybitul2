@@ -152,7 +152,6 @@ oneLineWhile :: Parser Construct
 oneLineWhile = do
   exp <- blockHeader "while"
   body <- expression <?> "single expression"
-  eol
   return $ While exp [Stmt body]
 
 ifelse :: Parser Construct
@@ -183,4 +182,4 @@ oneLineIf = do
   return $ If clause [body] (fromMaybe [] elseblock)
 
 program :: Parser Program
-program = Program <$> many (L.nonIndented scn (construct <* eol)) <* eof
+program = Program <$> many (L.nonIndented scn construct) <* eof

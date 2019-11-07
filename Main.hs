@@ -16,7 +16,12 @@ main = putStrLn ""
 test =
   tail
     [r|
-
+def test(x): print(x+x)
+i=0
+j=read()
+while i<j:
+    test(i)
+    i=i+1
 |]
 
 parseShow :: PrettyPrint a => Parser a -> String -> IO ()
