@@ -186,4 +186,4 @@ oneLineIf = do
   return $ If clause [body] (fromMaybe [] elseblock)
 
 program :: Parser Program
-program = Program <$> many (block (L.nonIndented scn construct))
+program = Program <$> many (block (L.nonIndented scn construct)) <* eof
