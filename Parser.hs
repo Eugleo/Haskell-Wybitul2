@@ -2,16 +2,16 @@
 
 module Parser where
 
-import           Control.Monad                  (guard, void)
-import           Control.Monad.Combinators.Expr
-import           Data.Functor                   (($>))
-import           Data.Maybe                     (fromMaybe)
-import           Data.Void                      (Void)
-import           Spec
-import           Text.Megaparsec
-import           Text.Megaparsec.Char
-import qualified Text.Megaparsec.Char.Lexer     as L
-import           Text.Megaparsec.Debug
+import Control.Monad (guard, void)
+import Control.Monad.Combinators.Expr
+import Data.Functor (($>))
+import Data.Maybe (fromMaybe)
+import Data.Void (Void)
+import Spec
+import Text.Megaparsec
+import Text.Megaparsec.Char
+import qualified Text.Megaparsec.Char.Lexer as L
+import Text.Megaparsec.Debug
 
 type Parser = Parsec Void String
 
@@ -38,11 +38,11 @@ expression = makeExprParser expressionTerm expressionOperators
 expressionTerm :: Parser Expression
 expressionTerm =
   choice
-    [ try functionCall <?> "function call"
-    , parens expression <?> "parenthesised expression"
-    , variable <?> "variable name"
-    , number <?> "number"
-    , str <?> "string"
+    [ try functionCall <?> "function call",
+      parens expression <?> "parenthesised expression",
+      variable <?> "variable name",
+      number <?> "number",
+      str <?> "string"
     ]
 
 functionCall :: Parser Expression
@@ -77,28 +77,28 @@ variableName = lexeme (some $ oneOf validChars)
 
 expressionOperators :: [[Operator Parser Expression]]
 expressionOperators =
-  [ [ InfixL ((:*:) <$ symbol "*" <?> "arithmetic operator")
-    , InfixL ((:/:) <$ symbol "/" <?> "arithmetic operator")
-    ]
-  , [ InfixL ((:+:) <$ symbol "+" <?> "arithmetic operator")
-    , InfixL ((:-:) <$ symbol "-" <?> "arithmetic operator")
-    ]
-  , [ InfixL ((:<:) <$ symbol "<" <?> "arithmetic operator")
-    , InfixL ((:>:) <$ symbol ">" <?> "arithmetic operator")
+  [ [ InfixL ((:*:) <$ symbol "*" <?> "arithmetic operator"),
+      InfixL ((:/:) <$ symbol "/" <?> "arithmetic operator")
+    ],
+    [ InfixL ((:+:) <$ symbol "+" <?> "arithmetic operator"),
+      InfixL ((:-:) <$ symbol "-" <?> "arithmetic operator")
+    ],
+    [ InfixL ((:<:) <$ symbol "<" <?> "arithmetic operator"),
+      InfixL ((:>:) <$ symbol ">" <?> "arithmetic operator")
     ]
   ]
 
 construct :: Parser Construct
 construct =
   choice
-    [ try oneLineFunctionDefinition <?> "function definition"
-    , try functionDefinition <?> "function definition"
-    , try oneLineWhile
-    , try while
-    , try assignment
-    , try oneLineIf
-    , try ifelse
-    , statement <?> "expression"
+    [ try oneLineFunctionDefinition <?> "function definition",
+      try functionDefinition <?> "function definition",
+      try oneLineWhile,
+      try while,
+      try assignment,
+      try oneLineIf,
+      try ifelse,
+      statement <?> "expression"
     ]
 
 statement :: Parser Construct
@@ -162,21 +162,22 @@ ifelse = do
   (clause, body) <-
     L.indentBlock scn $ do
       exp <- blockHeader "if"
-      return $ L.IndentSome Nothing (return . (exp, )) construct
+      return $ L.IndentSome Nothing (return . (exp,)) construct
   elseblock <-
-    optional $
-    L.indentBlock scn $ do
-      lexeme $ string "else"
-      symbol ":"
-      return $ L.IndentSome Nothing return construct
+    optional
+      $ L.indentBlock scn
+      $ do
+        lexeme $ string "else"
+        symbol ":"
+        return $ L.IndentSome Nothing return construct
   return $ If clause body (fromMaybe [] elseblock)
 
 oneLineIf :: Parser Construct
 oneLineIf = do
-  (clause, body) <-
-    do exp <- blockHeader "if"
-       body <- construct
-       return (exp, body)
+  (clause, body) <- do
+    exp <- blockHeader "if"
+    body <- construct
+    return (exp, body)
   elseblock <-
     optional $ do
       lexeme $ string "else"

@@ -1,14 +1,14 @@
-{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
 module PrettyPrinter where
 
 import Checker
 import Data.Foldable
-import Data.List        (intersperse)
-import Prelude          hiding ((<>))
+import Data.List (intersperse)
 import Spec
 import Text.PrettyPrint hiding (TextDetails (..))
+import Prelude hiding ((<>))
 
 indentLevel :: Int
 indentLevel = 4
@@ -20,17 +20,17 @@ instance PrettyPrint Symbol where
   pretty = text
 
 instance PrettyPrint Expression where
-  pretty (Var name)          = text name
-  pretty (Num number)        = int number
-  pretty (Str string)        = doubleQuotes (text string)
-  pretty (e1 :+: e2)         = hsep [pretty e1, text "+", pretty e2]
-  pretty (e1 :-: e2)         = hsep [pretty e1, text "-", pretty e2]
-  pretty (e1 :/: e2)         = hsep [pretty e1, text "/", pretty e2]
-  pretty (e1 :*: e2)         = hsep [pretty e1, text "*", pretty e2]
-  pretty (e1 :<: e2)         = hsep [pretty e1, text "<", pretty e2]
-  pretty (e1 :>: e2)         = hsep [pretty e1, text ">", pretty e2]
+  pretty (Var name) = text name
+  pretty (Num number) = int number
+  pretty (Str string) = doubleQuotes (text string)
+  pretty (e1 :+: e2) = hsep [pretty e1, text "+", pretty e2]
+  pretty (e1 :-: e2) = hsep [pretty e1, text "-", pretty e2]
+  pretty (e1 :/: e2) = hsep [pretty e1, text "/", pretty e2]
+  pretty (e1 :*: e2) = hsep [pretty e1, text "*", pretty e2]
+  pretty (e1 :<: e2) = hsep [pretty e1, text "<", pretty e2]
+  pretty (e1 :>: e2) = hsep [pretty e1, text ">", pretty e2]
   pretty (FunCall name args) = text name <> parens (list args)
-  pretty (Par exp)           = parens (pretty exp)
+  pretty (Par exp) = parens (pretty exp)
 
 instance PrettyPrint Construct where
   pretty (FunDef name args body) = block header body <+> newline
@@ -68,23 +68,24 @@ newline = text "\n"
 
 instance PrettyPrint Error where
   pretty (Undeclared name context) =
-    text "Undeclared identifier" <+>
-    quotes (pretty name) $+$ vcat (prettyContext <$> context)
+    text "Undeclared identifier"
+      <+> quotes (pretty name) $+$ vcat (prettyContext <$> context)
 
 prettyContext :: Construct -> Doc
 prettyContext (FunDef name _ _) =
   text ".. found in definition of" <+> quotes (pretty name)
 prettyContext (Stmt exp) =
-  text ".. found in statement" $+$ text "   " <> quotes (pretty exp)
+  text ".. found in statement"
+    $+$ text "   " <> quotes (pretty exp)
 prettyContext (Assign name exp) =
-  text ".. found in assignment" $+$ text "   " <>
-  quotes (hsep [text name, text "=", pretty exp])
+  text ".. found in assignment"
+    $+$ text "   " <> quotes (hsep [text name, text "=", pretty exp])
 prettyContext (If exp true false) =
-  text ".. found in if-expression" $+$ text "   " <>
-  quotes (text "if" <+> pretty exp <+> text ": [...]")
+  text ".. found in if-expression"
+    $+$ text "   " <> quotes (text "if" <+> pretty exp <+> text ": [...]")
 prettyContext (While exp body) =
-  text ".. found in while loop" $+$ text "   " <>
-  quotes (text "while" <+> pretty exp <+> text ": [...]")
+  text ".. found in while loop"
+    $+$ text "   " <> quotes (text "while" <+> pretty exp <+> text ": [...]")
 
 instance PrettyPrint [Error] where
   pretty = vcat . fmap pretty
