@@ -13,9 +13,6 @@ import Text.PrettyPrint hiding (TextDetails (..))
 indentLevel :: Int
 indentLevel = 4
 
-lineLen :: Int
-lineLen = 88
-
 class PrettyPrint a where
   pretty :: a -> Doc
 
@@ -92,5 +89,5 @@ prettyContext (While exp body) =
 instance PrettyPrint [Error] where
   pretty = vcat . fmap pretty
 
-ppshow :: PrettyPrint a => a -> String
-ppshow = renderStyle (style {lineLength = lineLen}) . pretty
+ppshow :: PrettyPrint a => Int -> a -> String
+ppshow lineLength = renderStyle (style {lineLength = lineLength}) . pretty

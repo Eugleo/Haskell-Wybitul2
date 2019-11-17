@@ -29,6 +29,7 @@ executable Wybitul2
     megaparsec,
     pretty,
     containers,
+    optparse-applicative,
     parser-combinators,
     raw-strings-qq,
     base >=4.13 && <4.14
