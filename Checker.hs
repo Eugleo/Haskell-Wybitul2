@@ -99,5 +99,8 @@ checkConstructs (c@(FunDef name args body):cs) =
   local (addToVars (name : args) . addToContext c) (checkConstructs body) <*>
   local (addToVars [name]) (checkConstructs cs)
 
-runChecker :: Checker -> (Status, [Error])
-runChecker checker = runWriter (runReaderT checker ([], S.empty))
+definedConstants :: [Symbol]
+definedConstants = ["pass", "print", "read"]
+
+check :: Checker -> (Status, [Error])
+check checker = runWriter (runReaderT checker ([], S.fromList definedConstants))

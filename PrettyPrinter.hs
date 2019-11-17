@@ -3,6 +3,7 @@
 
 module PrettyPrinter where
 
+import Checker
 import Data.Foldable
 import Data.List        (intersperse)
 import Prelude          hiding ((<>))
@@ -67,6 +68,29 @@ block head body = head <> text ":" <+> lbrace $+$ nested body $+$ rbrace
 
 newline :: Doc
 newline = text "\n"
+
+instance PrettyPrint Error where
+  pretty (Undeclared name context) =
+    text "Undeclared identifier" <+>
+    quotes (pretty name) $+$ vcat (prettyContext <$> context)
+
+prettyContext :: Construct -> Doc
+prettyContext (FunDef name _ _) =
+  text ".. found in definition of" <+> quotes (pretty name)
+prettyContext (Stmt exp) =
+  text ".. found in statement" $+$ text "   " <> quotes (pretty exp)
+prettyContext (Assign name exp) =
+  text ".. found in assignment" $+$ text "   " <>
+  quotes (hsep [text name, text "=", pretty exp])
+prettyContext (If exp true false) =
+  text ".. found in if-expression" $+$ text "   " <>
+  quotes (text "if" <+> pretty exp <+> text ": [...]")
+prettyContext (While exp body) =
+  text ".. found in while loop" $+$ text "   " <>
+  quotes (text "while" <+> pretty exp <+> text ": [...]")
+
+instance PrettyPrint [Error] where
+  pretty = vcat . fmap pretty
 
 ppshow :: PrettyPrint a => a -> String
 ppshow = renderStyle (style {lineLength = lineLen}) . pretty

@@ -23,6 +23,9 @@ sc = L.space (void $ takeWhile1P Nothing f) empty empty
   where
     f x = x == ' ' || x == '\t'
 
+block :: Parser a -> Parser a
+block = L.lexeme scn
+
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme sc
 
@@ -182,4 +185,4 @@ oneLineIf = do
   return $ If clause [body] (fromMaybe [] elseblock)
 
 program :: Parser Program
-program = Program <$> many (L.nonIndented scn construct) <* eof
+program = Program <$> many (block (L.nonIndented scn construct))
