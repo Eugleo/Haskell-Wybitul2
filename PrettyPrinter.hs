@@ -47,7 +47,7 @@ instance PrettyPrint Construct where
 
 prettyConstruct :: (Construct, Int) -> Doc
 prettyConstruct (x@FunDef {}, i)
-  | i /= 1 = newline <+> pretty x
+  | i /= 1 = newline <> pretty x
   | otherwise = pretty x
 prettyConstruct (x, _) = pretty x
 
