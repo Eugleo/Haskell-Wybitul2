@@ -59,4 +59,4 @@ module Main where
   checkSource input =
     case check $ checkProgram (parseProgram input) of
       (OK, _) -> putStrLn $ ppshow 100 "All OK!"
-      (NotOK, errors) -> putStrLn "Error" >> putStrLn (ppshow 100 errors)
+      (NotOK, errors) -> putStr "Error: " >> putStrLn (ppshow 100 errors)
